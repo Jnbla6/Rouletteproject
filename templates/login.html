@@ -3,24 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Wheel Login</title>
+    <title>Speakers Wheel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@300;700&display=swap" rel="stylesheet">
 </head>
 <body class="login-body">
     
     <div class="bento-container login-layout">
-        <div class="card hero-card">
-            <div class="badge">Live Session</div>
-            <h1>JOIN THE<br><span class="highlight-text">LUCKY</span><br>WHEEL</h1>
-            <div class="decorative-circle"></div>
-            <div class="decorative-pill">Play</div>
-        </div>
+        <div class="card hero-card single-block">
+            
+            <div class="visual-content">
+                <h1>JOIN THE<br><span class="highlight-text">Speakers</span><br>WHEEL</h1>
+                <div class="decorative-circle"></div>
+            </div>
 
-        <div class="card form-card">
             <div class="form-content">
-                <h2>Welcome</h2>
-                <p>Enter your name to join the lobby.</p>
+                <p>Enter your name to join the Wheel.</p>
                 <form method="POST">
                     <div class="input-group">
                         <input type="text" name="username" placeholder="Enter your name..." required autocomplete="off">
@@ -30,12 +28,13 @@
                 
                 <div class="stat-box">
                     <span class="pulse-dot"></span>
-                    <strong>Waiting for players...</strong>
+                    <strong>Waiting for Users...</strong>
                 </div>
             </div>
+            
         </div>
-    </div>
-
-    </div> <div class="footer">dev by @badr</div>
+    </div> 
+    
+    <div class="footer">dev by @badr</div>
 </body>
 </html>

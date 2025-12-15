@@ -24,7 +24,7 @@ def login():
             
     return render_template('login.html')
 
-@app.route('/admin')
+@app.route('/moder')
 def admin_dashboard():
     if session.get('username') != 'admin':
         return redirect(url_for('login'))
@@ -60,6 +60,16 @@ def handle_reset():
 @socketio.on('connect')
 def handle_connect():
     emit('update_players', {'players': players})
+
+# --- Add this to your socket events in app.py ---
+
+@socketio.on('remove_player')
+def handle_remove(data):
+    player_to_remove = data.get('name')
+    if player_to_remove in players:
+        players.remove(player_to_remove)
+        # Broadcast the new list to everyone immediately
+        emit('update_players', {'players': players}, broadcast=True)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)

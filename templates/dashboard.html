@@ -12,7 +12,7 @@
 <body>
 
     <nav>
-        <div class="logo">WHEEL.</div>
+        <div class="logo">SPEAKERS WHEEL.</div>
         <div class="user-pill">
             <span class="dot"></span> {{ username }}
         </div>
@@ -33,22 +33,31 @@
                 <div id="status" class="status-text">Waiting for spin...</div>
             </div>
 
-            {% if user_type == 'admin' %}
+                {% if user_type == 'admin' %}
                 <div class="card control-card admin-mode">
                     <h3>Controls</h3>
                     <button id="spinBtn" class="btn-pill white-btn" onclick="triggerSpin()">SPIN WHEEL</button>
-                    <button id="resetBtn" class="btn-pill dark-btn" onclick="triggerReset()">Reset List</button>
+                    <button class="btn-pill white-btn" onclick="openManageModal()" style="background: rgba(255,255,255,0.2); color: white;">Manage Users</button> 
+                    <button id="resetBtn" class="btn-pill dark-btn" onclick="triggerReset()">Reset All</button>
                 </div>
-            {% else %}
+                {% else %}
                 <div class="card control-card user-mode">
                     <h3>Get Ready</h3>
                     <p>Watch the screen. Good luck!</p>
                 </div>
-            {% endif %}
+                {% endif %}
 
+    <div id="manageModal" class="modal">
+        <div class="modal-content manage-content">
+            <span class="close-btn" onclick="closeManageModal()">&times;</span>
+            <div class="modal-header">ACTIVE PLAYERS</div>
+            <div id="playerListContainer" class="player-list-box">
+                </div>
+        </div>
+    </div>
             <div class="card info-card">
                 <span class="big-num" id="playerCount">0</span>
-                <span>Players</span>
+                <span>USERS</span>
             </div>
         </div>
     </div>
@@ -69,7 +78,5 @@
 
     </div> <div class="footer">website dev by badr</div>
 
-    <div id="winnerModal" class="modal">...</div>
-    ...
 </body>
 </html>

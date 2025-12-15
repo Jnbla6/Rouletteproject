@@ -38,8 +38,25 @@ body {
 
 /* --- Login Page Specifics --- */
 .login-layout {
-    grid-template-columns: 1.2fr 1fr;
-    /* Remove fixed height, let flex body handle centering */
+    display: flex;           /* Use flex to handle the single item */
+    justify-content: center; /* Center horizontally */
+    align-items: center;     /* Center vertically */
+    width: 100%;
+    margin: auto;            /* Auto margin for flex body centering */
+}
+
+/* The Single Card Styling */
+.single-block {
+    width: 100%;
+    max-width: 480px;        /* Limits width so it looks like a clean box */
+    text-align: center;      /* Centers text inside the card */
+    padding: 40px;
+    
+    /* Ensure the visuals align nicely in column */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
 }
 
 @media (max-width: 768px) {
@@ -126,13 +143,17 @@ input {
     width: 100%;
     padding: 18px;
     border-radius: 12px;
-    border: none;
+    
+    /* CHANGE THIS LINE (Add the stroke) */
+    border: 1px solid rgba(0,0,0,0.2); 
+    
     margin-bottom: 12px;
     font-size: 1rem;
     font-family: var(--font-body);
     box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     box-sizing: border-box;
     outline: none;
+    transition: border-color 0.3s ease; /* Smooth transition */
 }
 
 .btn-primary {
@@ -322,4 +343,71 @@ canvas {
     top: 20px; right: 25px;
     font-size: 2rem;
     cursor: pointer;
+}
+
+/* --- Manage Users Modal UI --- */
+.manage-content {
+    width: 90%;
+    max-width: 350px;
+    padding: 25px;
+    text-align: left; /* List looks better left-aligned */
+    max-height: 80vh; /* Don't get too tall on mobile */
+    display: flex;
+    flex-direction: column;
+}
+
+.player-list-box {
+    margin-top: 15px;
+    overflow-y: auto; /* Allow scrolling if many users */
+    flex-grow: 1;
+    padding-right: 5px; /* Space for scrollbar */
+}
+
+/* Custom Scrollbar */
+.player-list-box::-webkit-scrollbar { width: 6px; }
+.player-list-box::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
+
+.player-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #f9f9f9;
+    border-radius: 12px;
+    transition: 0.2s;
+    border: 1px solid transparent;
+}
+
+.player-row:hover {
+    border-color: #ddd;
+    background: white;
+    transform: translateX(2px);
+}
+
+.player-name {
+    font-weight: bold;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+}
+
+.remove-icon {
+    background: #FFEDED;
+    color: #FF4D4D;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.2rem;
+    line-height: 1;
+    transition: 0.2s;
+}
+
+.remove-icon:hover {
+    background: #FF4D4D;
+    color: white;
 }

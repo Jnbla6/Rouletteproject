@@ -2,102 +2,109 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log("Script loaded and ready.");
 
     const socket = io();
+    
+    // --- UI ELEMENTS (DEFINED AT TOP TO PREVENT ERRORS) ---
     const canvas = document.getElementById('wheelCanvas');
     const ctx = canvas.getContext('2d');
     const wheelContainer = document.getElementById('wheelContainer');
     
-    // UI Elements
     const winnerDisplay = document.getElementById('status'); 
     const modal = document.getElementById('winnerModal');
     const winnerText = document.getElementById('winnerText');
     const playerCountEl = document.getElementById('playerCount');
 
+    // Manage Modal Elements
+    const manageModal = document.getElementById('manageModal');
+    const listContainer = document.getElementById('playerListContainer');
+
+    // State Variables
     let players = [];
     let startAngle = 0;
     let arc = 0;
     let isSpinning = false;
     let currentRotation = 0; 
 
-    // Modern Bento Color Palette
+    // Colors
     const colors = ["#D4F238", "#9D84F6", "#3E6AEF", "#FF8C33", "#1A1A1A", "#E0DCD0"];
     const textColors = ["#1A1A1A", "#1A1A1A", "#FFFFFF", "#1A1A1A", "#FFFFFF", "#1A1A1A"];
 
-    // --- 1. RESIZE LOGIC (Crucial for visibility) ---
+    // --- 1. RESIZE LOGIC ---
     function resizeCanvas() {
         if (!wheelContainer) return;
         
-        // Get width of the container
-        let size = wheelContainer.offsetWidth - 40; 
+        const dpr = window.devicePixelRatio || 1; 
+        const rect = wheelContainer.getBoundingClientRect();
         
-        // Limit max size
-        if (size > 500) size = 500;
-        // Limit min size (prevent 0px bug)
-        if (size < 300) size = 300; 
+        // Calculate size based on container
+        let size = Math.min(rect.width, rect.height) - 40;
+        if (size < 200) size = 200; 
 
-        canvas.width = size;
-        canvas.height = size;
-        
-        // Redraw immediately after resize
+        canvas.width = size * dpr;
+        canvas.height = size * dpr;
+        canvas.style.width = size + "px";
+        canvas.style.height = size + "px";
+
+        ctx.scale(dpr, dpr);
         drawRouletteWheel();
     }
-
-    // Resize when window changes
     window.addEventListener('resize', resizeCanvas);
-    // Resize immediately on load
-    resizeCanvas();
 
     // --- 2. SOCKET EVENTS ---
     socket.on('connect', () => {
         console.log("Connected to server!");
+        resizeCanvas();
     });
 
     socket.on('update_players', (data) => {
-        console.log("Players updated:", data.players);
         players = data.players;
         
+        // Update User Count
         if(playerCountEl) playerCountEl.innerText = players.length;
         
-        drawRouletteWheel();
+        // Redraw Wheel
+        resizeCanvas(); 
+        
+        // Update Admin List if it's currently open
+        if (manageModal && manageModal.style.display === 'block') {
+            renderPlayerList();
+        }
     });
 
     socket.on('spin_result', (data) => {
         if (isSpinning) return;
-        console.log("Spinning to:", data.winner);
-        
         if(winnerDisplay) winnerDisplay.innerText = "Spinning...";
         spinWheelToWinner(data.index);
     });
 
     // --- 3. DRAWING LOGIC ---
     function drawRouletteWheel() {
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
+        const width = parseFloat(canvas.style.width);
+        const height = parseFloat(canvas.style.height);
+        const centerX = width / 2;
+        const centerY = height / 2;
         
-        // If no players, draw a "Waiting" placeholder
+        ctx.clearRect(0, 0, width, height);
+
         if (players.length === 0) {
-            ctx.clearRect(0,0, canvas.width, canvas.height);
-            
-            // Draw gray circle
+            // Draw Empty State
             ctx.beginPath();
-            ctx.arc(centerX, centerY, canvas.width/2 - 10, 0, Math.PI * 2);
+            ctx.arc(centerX, centerY, width/2 - 10, 0, Math.PI * 2);
             ctx.fillStyle = "#f0f0f0";
             ctx.fill();
             ctx.stroke();
 
-            ctx.font = 'bold 20px sans-serif';
+            ctx.font = 'bold 20px DM Sans, Arial';
             ctx.fillStyle = "#999";
             ctx.textAlign = "center";
+            ctx.textBaseline = "middle"; 
             ctx.fillText("Waiting for players...", centerX, centerY);
             return;
         }
 
-        const outsideRadius = canvas.width / 2 - 10;
-        const textRadius = canvas.width / 2 - 50;
+        const outsideRadius = width / 2 - 10;
+        const textRadius = width / 2 - 50;
         const insideRadius = 40;
-
         arc = Math.PI * 2 / players.length;
-        
-        ctx.clearRect(0,0, canvas.width, canvas.height);
 
         players.forEach((player, i) => {
             const angle = startAngle + i * arc;
@@ -111,40 +118,41 @@ document.addEventListener("DOMContentLoaded", function() {
             ctx.fill();
 
             ctx.save();
-            
-            // Text styling
             ctx.fillStyle = textColors[i % textColors.length];
             ctx.translate(centerX + Math.cos(angle + arc / 2) * textRadius, 
                           centerY + Math.sin(angle + arc / 2) * textRadius);
             ctx.rotate(angle + arc / 2 + Math.PI / 2);
             
-            const text = player;
-            ctx.font = 'bold 16px DM Sans, Arial';
-            ctx.fillText(text, -ctx.measureText(text).width / 2, 0);
+            const fontSize = Math.max(14, width / 25); 
+            ctx.font = `bold ${fontSize}px DM Sans, Arial`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            
+            let text = player;
+            if (text.length > 15) text = text.substring(0, 12) + "...";
+
+            ctx.fillText(text, 0, 0);
             ctx.restore();
         });
 
-        // Draw Center Pin (White Circle)
+        // Center Pin
         ctx.beginPath();
         ctx.arc(centerX, centerY, insideRadius - 5, 0, 2 * Math.PI);
         ctx.fillStyle = "#fff";
         ctx.fill();
-        
-        // Draw Triangle Arrow (Static on top of canvas using CSS is better, but this is a backup)
     }
 
     // --- 4. SPIN LOGIC ---
     function spinWheelToWinner(winnerIndex) {
         isSpinning = true;
         if(modal) modal.style.display = 'none'; 
+        if(manageModal) manageModal.style.display = 'none'; // Close manage modal if open
         
-        const extraRotations = 360 * 8; // 8 full spins
+        const extraRotations = 360 * 8; 
         const sliceDeg = 360 / players.length;
-        
-        // Target is top (270 deg)
         const winningSliceCenter = (winnerIndex * sliceDeg) + (sliceDeg / 2);
-        let targetRotation = 270 - winningSliceCenter;
         
+        let targetRotation = 270 - winningSliceCenter;
         while(targetRotation < 0) targetRotation += 360;
         
         const currentRotMod = currentRotation % 360;
@@ -154,24 +162,65 @@ document.addEventListener("DOMContentLoaded", function() {
         const finalDegree = currentRotation + dist + extraRotations;
         currentRotation = finalDegree; 
 
-        // Apply CSS Transform
         canvas.style.transition = "transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)";
         canvas.style.transform = `rotate(${finalDegree}deg)`;
 
-        // Wait for animation to finish
         setTimeout(() => {
             isSpinning = false;
-            const winnerName = players[winnerIndex];
-            
-            if(winnerDisplay) winnerDisplay.innerText = "Winner: " + winnerName;
-            if(winnerText) winnerText.innerText = winnerName;
+            if(winnerDisplay) winnerDisplay.innerText = "Winner: " + players[winnerIndex];
+            if(winnerText) winnerText.innerText = players[winnerIndex];
             if(modal) modal.style.display = 'block';
-            
             launchConfetti();
         }, 5000);
     }
 
-    // --- 5. GLOBAL FUNCTIONS (For HTML buttons) ---
+    // --- 5. MANAGE USERS LOGIC ---
+
+    // Define globally so HTML onclick can see it
+    window.removeSpecificUser = function(name) {
+        // Prevent accidental clicks on empty space
+        if(!name) return;
+        socket.emit('remove_player', { name: name });
+        // List will auto-update when server sends 'update_players' back
+    };
+
+    window.openManageModal = function() {
+        if(!manageModal) return;
+        renderPlayerList(); 
+        manageModal.style.display = 'block';
+    };
+
+    window.closeManageModal = function() {
+        if(manageModal) manageModal.style.display = 'none';
+    };
+
+    function renderPlayerList() {
+        if (!listContainer) return;
+        listContainer.innerHTML = ""; 
+
+        if (players.length === 0) {
+            listContainer.innerHTML = "<p style='text-align:center; opacity:0.5;'>No players yet.</p>";
+            return;
+        }
+
+        players.forEach(player => {
+            const row = document.createElement('div');
+            row.className = 'player-row';
+            
+            // Escape quotes in names to prevent bugs
+            const safeName = player.replace(/'/g, "\\'");
+            
+            const html = `
+                <span class="player-name">${player}</span>
+                <div class="remove-icon" onclick="removeSpecificUser('${safeName}')">&times;</div>
+            `;
+            
+            row.innerHTML = html;
+            listContainer.appendChild(row);
+        });
+    }
+
+    // --- 6. GLOBAL CONTROLS ---
     window.triggerSpin = function() {
         if(players.length > 0) socket.emit('spin_wheel');
         else alert("Add players first!");
@@ -189,9 +238,11 @@ document.addEventListener("DOMContentLoaded", function() {
     window.closeModal = function() {
         if(modal) modal.style.display = 'none';
     };
-
+    
+    // Handle clicks outside modals
     window.onclick = function(event) {
         if (event.target == modal) modal.style.display = "none";
+        if (event.target == manageModal) manageModal.style.display = "none";
     };
 
     function launchConfetti() {
