@@ -6,6 +6,8 @@
     <title>Speakers Wheel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@300;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
 <body class="login-body">
     
@@ -19,16 +21,23 @@
 
             <div class="form-content">
                 <p>Enter your name to join the Wheel.</p>
+                
+                {% if error %}
+                    <div class="error-alert">
+                        {{ error }}
+                    </div>
+                {% endif %}
                 <form method="POST">
                     <div class="input-group">
-                        <input type="text" name="username" placeholder="Enter your name..." required autocomplete="off">
+                        <input type="text" name="username" placeholder="Enter your name..." required autocomplete="off" 
+                               value="{{ request.form.username if error else '' }}">
                     </div>
                     <button type="submit" class="btn-primary">Join Room ➔</button>
                 </form>
                 
-                <div class="stat-box">
+                <div class="stat-box" id="statusBox">
                     <span class="pulse-dot"></span>
-                    <strong>Waiting for Users...</strong>
+                    <strong id="userCountText">Waiting for Users...</strong>
                 </div>
             </div>
             
@@ -36,5 +45,26 @@
     </div> 
     
     <div class="footer">dev by @badr</div>
+
+    <script>
+        const socket = io();
+        const statusText = document.getElementById('userCountText');
+
+        socket.on('connect', () => {
+            console.log("Login page connected to socket.");
+        });
+
+        socket.on('update_players', (data) => {
+            const count = data.players.length;
+            
+            if (count === 0) {
+                statusText.innerText = "Waiting for Users...";
+            } else if (count === 1) {
+                statusText.innerText = "1 User Waiting inside...";
+            } else {
+                statusText.innerText = count + " Users Waiting inside...";
+            }
+        });
+    </script>
 </body>
 </html>

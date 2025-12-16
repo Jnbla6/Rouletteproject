@@ -10,10 +10,22 @@ players = []
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
+    error = None # Store error here
+    
     if request.method == 'POST':
         username = request.form.get('username')
+        
         if not username:
             return redirect(url_for('login'))
+        
+        # Clean the name (remove spaces)
+        username = username.strip()
+
+        # --- NEW CHECK: PREVENT DUPLICATES ---
+        if username in players:
+            error = "⚠️ That name is already taken!"
+            return render_template('login.html', error=error)
+        # -------------------------------------
         
         session['username'] = username
         
